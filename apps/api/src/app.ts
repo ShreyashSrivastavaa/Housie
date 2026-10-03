@@ -14,7 +14,20 @@ export function createApp(): express.Application {
   app.use(helmet());
   app.use(
     cors({
-      origin: [env.WEB_URL],
+      origin: (origin, callback) => {
+        // Allow requests with no origin (internal service bindings, curl, mobile apps)
+        if (!origin) return callback(null, true);
+        // Allow configured WEB_URL, any vercel preview deployment, or localhost
+        if (
+          origin === env.WEB_URL ||
+          origin.endsWith('.vercel.app') ||
+          origin.includes('localhost') ||
+          origin.includes('127.0.0.1')
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key', 'X-Requested-With'],
