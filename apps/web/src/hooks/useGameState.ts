@@ -157,10 +157,16 @@ export function useGameState() {
     if (status !== GameStatus.LIVE) return null;
     if (remainingNumbers.length === 0) return null;
 
-    // Cryptographically secure selection
-    const buffer = new Uint32Array(1);
-    window.crypto.getRandomValues(buffer);
-    const randomIndex = (buffer[0] ?? 0) % remainingNumbers.length;
+    // Cryptographically secure selection (with robust fallback if crypto is not supported)
+    let randomIndex = 0;
+    if (typeof window !== 'undefined' && window.crypto && typeof window.crypto.getRandomValues === 'function') {
+      const buffer = new Uint32Array(1);
+      window.crypto.getRandomValues(buffer);
+      randomIndex = (buffer[0] ?? 0) % remainingNumbers.length;
+    } else {
+      randomIndex = Math.floor(Math.random() * remainingNumbers.length);
+    }
+
     const nextNum = remainingNumbers[randomIndex];
 
     if (!nextNum) return null;

@@ -22,13 +22,19 @@
   --heading: #FFFFFF;
 }
 
-body {
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
   color: var(--foreground);
   background: var(--background);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.2s ease, color 0.2s ease;
+  touch-action: manipulation;
 }
 
 /* Glassmorphism helpers */
@@ -49,10 +55,19 @@ body {
   border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* Custom scrollbar */
+/* Hide scrollbar for clean horizontal tapes on mobile */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom scrollbar for desktop */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {

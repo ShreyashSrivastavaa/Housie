@@ -433,7 +433,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                 <select
                   value={selectedPrizeId}
                   onChange={(e) => setSelectedPrizeId(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-3 py-2.5 text-base sm:text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 >
                   {prizes.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -448,14 +448,14 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                   Player Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <User className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     required
                     placeholder="e.g. Rahul Sharma"
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    className="w-full rounded-xl border border-surface-border bg-surface-subtle pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
+                    className="w-full rounded-xl border border-surface-border bg-surface-subtle pl-9 pr-4 py-2.5 text-base sm:text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -465,14 +465,14 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                   Physical Ticket Number
                 </label>
                 <div className="relative">
-                  <Ticket className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Ticket className="absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     required
                     placeholder="e.g. 42"
                     value={ticketNumber}
                     onChange={(e) => setTicketNumber(e.target.value)}
-                    className="w-full rounded-xl border border-surface-border bg-surface-subtle pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
+                    className="w-full rounded-xl border border-surface-border bg-surface-subtle pl-9 pr-4 py-2.5 text-base sm:text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                   />
                 </div>
               </div>
@@ -486,7 +486,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                   placeholder="e.g. Verified offline by referee"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-base sm:text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 />
               </div>
 
@@ -549,7 +549,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                   placeholder="e.g. Early Five, Full House, Star"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-base sm:text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 />
               </div>
 
@@ -563,7 +563,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                   placeholder="e.g. Cash Prize, Gift Hamper"
                   value={customPrizeName}
                   onChange={(e) => setCustomPrizeName(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-base sm:text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 />
               </div>
 
@@ -578,7 +578,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                   required
                   value={customAmount}
                   onChange={(e) => setCustomAmount(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-base sm:text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 />
               </div>
 
