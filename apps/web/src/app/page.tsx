@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Tv, Edit3, Check, Trophy } from 'lucide-react';
+import { Tv, Edit3, Check, Sun, Moon } from 'lucide-react';
 import { NumberBall } from '../components/ball/NumberBall';
 import { GameBoard } from '../components/board/GameBoard';
 import { HostControls } from '../components/host/HostControls';
 import { PrizesSection } from '../components/prizes/PrizesSection';
 import { WinnerCelebrationModal } from '../components/celebration/WinnerCelebrationModal';
 import { useGameState } from '../hooks/useGameState';
+import { useTheme } from '../hooks/useTheme';
 
 export default function HomePage() {
   const {
@@ -27,7 +28,6 @@ export default function HomePage() {
     celebrationWinner,
     setCelebrationWinner,
     callNextNumber,
-    manualCallNumber,
     undoLastCall,
     togglePause,
     resetGame,
@@ -37,9 +37,13 @@ export default function HomePage() {
     toggleWinnerPaid,
     reopenPrize,
     addCustomPrize,
+    deletePrize,
+    clearAllPrizes,
     updateSettings,
     toggleAutoCalling,
   } = useGameState();
+
+  const { theme, toggleTheme } = useTheme();
 
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(gameName);
@@ -63,7 +67,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col transition-colors duration-200">
       {/* Top Navbar */}
       <header className="sticky top-0 z-40 border-b border-surface-border bg-surface/90 px-4 py-3 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
@@ -81,7 +85,7 @@ export default function HomePage() {
                   onChange={(e) => setTempTitle(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleTitleSave()}
                   autoFocus
-                  className="rounded-lg border border-brand-500 bg-surface-subtle px-2.5 py-1 text-sm font-bold text-white focus:outline-none"
+                  className="rounded-lg border border-brand-500 bg-surface-subtle px-2.5 py-1 text-sm font-bold text-slate-900 dark:text-white focus:outline-none"
                 />
                 <button
                   type="button"
@@ -92,25 +96,49 @@ export default function HomePage() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-2 group cursor-pointer" onClick={() => {
-                setTempTitle(gameName);
-                setIsEditingTitle(true);
-              }}>
-                <h1 className="text-base sm:text-lg font-black tracking-tight text-white group-hover:text-brand-400 transition-colors">
+              <div
+                className="flex items-center gap-2 group cursor-pointer"
+                onClick={() => {
+                  setTempTitle(gameName);
+                  setIsEditingTitle(true);
+                }}
+              >
+                <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white group-hover:text-brand-500 transition-colors">
                   {gameName}
                 </h1>
-                <Edit3 className="h-3.5 w-3.5 text-slate-500 group-hover:text-brand-400 transition-colors" />
+                <Edit3 className="h-3.5 w-3.5 text-slate-400 group-hover:text-brand-500 transition-colors" />
               </div>
             )}
           </div>
 
-          {/* Action CTAs: TV Display & Status */}
-          <div className="flex items-center gap-3">
+          {/* Action CTAs: Theme Toggle & TV Display */}
+          <div className="flex items-center gap-2.5">
+            {/* Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-brand-500 hover:text-brand-500 transition-all active:scale-95"
+              title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="h-4 w-4 text-gold-400" />
+                  <span className="hidden sm:inline">Light</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="h-4 w-4 text-purple-600" />
+                  <span className="hidden sm:inline">Dark</span>
+                </>
+              )}
+            </button>
+
+            {/* Projector Screen Button */}
             <Link
               href="/display"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-xl border border-gold-500/40 bg-gold-500/10 px-3.5 py-1.5 text-xs font-bold text-gold-400 shadow-sm transition-all hover:bg-gold-500/20 hover:border-gold-400 active:scale-95"
+              className="flex items-center gap-1.5 rounded-xl border border-gold-500/40 bg-gold-500/10 px-3.5 py-1.5 text-xs font-bold text-gold-600 dark:text-gold-400 shadow-sm transition-all hover:bg-gold-500/20 hover:border-gold-400 active:scale-95"
             >
               <Tv className="h-4 w-4" />
               <span>Open Projector / TV Screen</span>
@@ -147,7 +175,6 @@ export default function HomePage() {
               onUndoLast={undoLastCall}
               onTogglePause={togglePause}
               onToggleAutoCalling={toggleAutoCalling}
-              onManualCall={manualCallNumber}
               onResetGame={resetGame}
               onUpdateSettings={updateSettings}
             />
@@ -159,8 +186,6 @@ export default function HomePage() {
           <GameBoard
             calledNumbers={calledNumbers}
             latestNumber={lastCalledNumber}
-            onManualCallSelect={(num) => manualCallNumber(num)}
-            interactive={status === 'LIVE'}
           />
         </section>
 
@@ -176,6 +201,8 @@ export default function HomePage() {
             onTogglePaid={toggleWinnerPaid}
             onReopenPrize={reopenPrize}
             onAddCustomPrize={addCustomPrize}
+            onDeletePrize={deletePrize}
+            onClearAllPrizes={clearAllPrizes}
           />
         </section>
       </main>

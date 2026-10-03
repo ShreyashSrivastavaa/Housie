@@ -43,88 +43,7 @@ export interface GameSettings extends SpeechSettings {
 
 const STORAGE_KEY = 'housie_standalone_game_v1';
 
-const DEFAULT_PRIZES: LocalPrize[] = [
-  {
-    id: 'p1',
-    key: PrizeKey.FIRST_FIVE,
-    name: 'Early Five (First 5)',
-    prizeName: 'Cash Prize',
-    prizeAmount: 50000, // ₹500
-    maxWinners: 1,
-    status: PrizeStatus.ACTIVE,
-    isCustom: false,
-  },
-  {
-    id: 'p2',
-    key: PrizeKey.TOP_LINE,
-    name: 'Top Line',
-    prizeName: 'Cash Prize',
-    prizeAmount: 50000,
-    maxWinners: 1,
-    status: PrizeStatus.ACTIVE,
-    isCustom: false,
-  },
-  {
-    id: 'p3',
-    key: PrizeKey.MIDDLE_LINE,
-    name: 'Middle Line',
-    prizeName: 'Cash Prize',
-    prizeAmount: 50000,
-    maxWinners: 1,
-    status: PrizeStatus.ACTIVE,
-    isCustom: false,
-  },
-  {
-    id: 'p4',
-    key: PrizeKey.BOTTOM_LINE,
-    name: 'Bottom Line',
-    prizeName: 'Cash Prize',
-    prizeAmount: 50000,
-    maxWinners: 1,
-    status: PrizeStatus.ACTIVE,
-    isCustom: false,
-  },
-  {
-    id: 'p5',
-    key: PrizeKey.FOUR_CORNERS,
-    name: 'Four Corners',
-    prizeName: 'Cash Prize',
-    prizeAmount: 50000,
-    maxWinners: 1,
-    status: PrizeStatus.ACTIVE,
-    isCustom: false,
-  },
-  {
-    id: 'p6',
-    key: PrizeKey.FULL_HOUSE,
-    name: 'Full House (1st)',
-    prizeName: 'Grand Prize',
-    prizeAmount: 150000, // ₹1,500
-    maxWinners: 1,
-    status: PrizeStatus.ACTIVE,
-    isCustom: false,
-  },
-  {
-    id: 'p7',
-    key: PrizeKey.SECOND_FULL_HOUSE,
-    name: 'Full House (2nd)',
-    prizeName: 'Second Prize',
-    prizeAmount: 100000,
-    maxWinners: 1,
-    status: PrizeStatus.ACTIVE,
-    isCustom: false,
-  },
-  {
-    id: 'p8',
-    key: PrizeKey.THIRD_FULL_HOUSE,
-    name: 'Full House (3rd)',
-    prizeName: 'Third Prize',
-    prizeAmount: 50000,
-    maxWinners: 1,
-    status: PrizeStatus.ACTIVE,
-    isCustom: false,
-  },
-];
+const DEFAULT_PRIZES: LocalPrize[] = [];
 
 const DEFAULT_SETTINGS: GameSettings = {
   soundEnabled: true,
@@ -157,7 +76,15 @@ export function useGameState() {
         if (parsed.gameName) setGameName(parsed.gameName);
         if (parsed.status) setStatus(parsed.status);
         if (Array.isArray(parsed.calledNumbers)) setCalledNumbers(parsed.calledNumbers);
-        if (Array.isArray(parsed.prizes)) setPrizes(parsed.prizes);
+        if (Array.isArray(parsed.prizes)) {
+          // If the stored prizes match the old default 8 prizes (starting with id 'p1'), clean them up to []
+          const hasOldDefaults = parsed.prizes.length === 8 && parsed.prizes[0]?.id === 'p1';
+          if (hasOldDefaults) {
+            setPrizes([]);
+          } else {
+            setPrizes(parsed.prizes);
+          }
+        }
         if (Array.isArray(parsed.winners)) setWinners(parsed.winners);
         if (parsed.settings) setSettings(parsed.settings);
       }
@@ -419,6 +346,16 @@ export function useGameState() {
     []
   );
 
+  // Delete a specific prize
+  const deletePrize = useCallback((prizeId: string) => {
+    setPrizes((prev) => prev.filter((p) => p.id !== prizeId));
+  }, []);
+
+  // Clear all prizes
+  const clearAllPrizes = useCallback(() => {
+    setPrizes([]);
+  }, []);
+
   // Update Settings
   const updateSettings = useCallback((newSettings: Partial<GameSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
@@ -440,7 +377,6 @@ export function useGameState() {
     celebrationWinner,
     setCelebrationWinner,
     callNextNumber,
-    manualCallNumber,
     undoLastCall,
     togglePause,
     resetGame,
@@ -450,6 +386,8 @@ export function useGameState() {
     toggleWinnerPaid,
     reopenPrize,
     addCustomPrize,
+    deletePrize,
+    clearAllPrizes,
     updateSettings,
     toggleAutoCalling,
   };

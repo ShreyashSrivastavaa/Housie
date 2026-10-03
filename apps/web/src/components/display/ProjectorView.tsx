@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Maximize2, Minimize2, Volume2, VolumeX, ArrowLeft, Trophy } from 'lucide-react';
+import { Maximize2, Minimize2, Volume2, VolumeX, ArrowLeft, Trophy, Sun, Moon } from 'lucide-react';
 import { NumberBall } from '../ball/NumberBall';
 import { GameBoard } from '../board/GameBoard';
 import { WinnerCelebrationModal } from '../celebration/WinnerCelebrationModal';
 import { useGameState } from '../../hooks/useGameState';
+import { useTheme } from '../../hooks/useTheme';
 import { PrizeStatus } from '@housie/shared';
 
 export const ProjectorView: React.FC = () => {
@@ -25,6 +26,8 @@ export const ProjectorView: React.FC = () => {
     updateSettings,
     callNextNumber,
   } = useGameState();
+
+  const { theme, toggleTheme } = useTheme();
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
@@ -49,7 +52,7 @@ export const ProjectorView: React.FC = () => {
   if (!isClient) return null;
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-white flex flex-col justify-between p-4 sm:p-6 lg:p-8 select-none">
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-between p-4 sm:p-6 lg:p-8 select-none transition-colors duration-200">
       {/* Top Bar */}
       <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div className="flex items-center gap-3">
@@ -94,6 +97,16 @@ export const ProjectorView: React.FC = () => {
             }`}
           >
             {settings.soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+          </button>
+
+          {/* Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-surface px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-surface-subtle hover:text-white transition-all"
+            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4 text-gold-400" /> : <Moon className="h-4 w-4 text-purple-400" />}
           </button>
 
           {/* Fullscreen Button */}
@@ -158,7 +171,6 @@ export const ProjectorView: React.FC = () => {
           <GameBoard
             calledNumbers={calledNumbers}
             latestNumber={lastCalledNumber}
-            interactive={false}
           />
         </div>
       </main>

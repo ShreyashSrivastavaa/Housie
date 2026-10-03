@@ -10,11 +10,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: '#0B0D14',
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
         surface: {
-          DEFAULT: '#141824',
-          subtle: '#1C2234',
-          border: '#283048',
+          DEFAULT: 'var(--surface)',
+          subtle: 'var(--surface-subtle)',
+          border: 'var(--surface-border)',
         },
         brand: {
           50: '#F5F3FF',

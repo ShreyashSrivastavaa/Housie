@@ -6,15 +6,11 @@ import { motion } from 'framer-motion';
 interface GameBoardProps {
   calledNumbers: number[];
   latestNumber: number | null;
-  onManualCallSelect?: (num: number) => void;
-  interactive?: boolean;
 }
 
 export const GameBoard: React.FC<GameBoardProps> = ({
   calledNumbers,
   latestNumber,
-  onManualCallSelect,
-  interactive = true,
 }) => {
   const calledSet = new Set(calledNumbers);
 
@@ -49,29 +45,24 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           const isLatest = num === latestNumber;
 
           return (
-            <motion.button
+            <motion.div
               key={num}
-              type="button"
-              disabled={!interactive || isCalled}
-              onClick={() => onManualCallSelect && onManualCallSelect(num)}
-              whileHover={interactive && !isCalled ? { scale: 1.12 } : {}}
-              whileTap={interactive && !isCalled ? { scale: 0.95 } : {}}
+              initial={false}
+              animate={isCalled ? { scale: isLatest ? 1.05 : 1 } : { scale: 1 }}
               className={`
                 relative flex aspect-square items-center justify-center rounded-lg text-xs sm:text-base font-bold transition-all duration-200 select-none
                 ${
                   isLatest
-                    ? 'bg-gradient-to-br from-neon-green via-emerald-500 to-teal-700 text-slate-950 font-black shadow-lg shadow-neon-green/30 ring-2 ring-white z-10 scale-105'
+                    ? 'bg-gradient-to-br from-neon-green via-emerald-500 to-teal-700 text-slate-950 font-black shadow-lg shadow-neon-green/30 ring-2 ring-white z-10'
                     : isCalled
                       ? 'bg-gradient-to-br from-brand-600 to-purple-800 text-white shadow-md shadow-brand-600/20 border border-brand-400/30'
-                      : 'bg-surface-subtle/80 text-slate-400 border border-white/5 hover:border-slate-500 hover:text-white'
+                      : 'bg-surface-subtle/80 text-slate-400 border border-white/5'
                 }
               `}
               title={
                 isCalled
-                  ? `Number ${num} (Already Called)`
-                  : interactive
-                    ? `Click to manually call ${num}`
-                    : `Number ${num}`
+                  ? `Number ${num} (Called)`
+                  : `Number ${num} (Not Called)`
               }
             >
               {num}
@@ -83,7 +74,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
                 </span>
               )}
-            </motion.button>
+            </motion.div>
           );
         })}
       </div>

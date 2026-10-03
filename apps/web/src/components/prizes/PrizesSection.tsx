@@ -10,6 +10,8 @@ import {
   Ticket,
   User,
   RotateCcw,
+  Trash2,
+  Sparkles,
 } from 'lucide-react';
 import { PrizeStatus, WinnerStatus } from '@housie/shared';
 import { LocalPrize, LocalWinner } from '../../hooks/useGameState';
@@ -34,7 +36,20 @@ interface PrizesSectionProps {
     prizeAmount: number,
     maxWinners: number
   ) => void;
+  onDeletePrize: (prizeId: string) => void;
+  onClearAllPrizes?: () => void;
 }
+
+const PRESET_SUGGESTIONS = [
+  { name: 'Early Five (Jaldi 5)', prize: 'Cash Prize', amount: '500' },
+  { name: 'Top Line', prize: 'Cash Prize', amount: '500' },
+  { name: 'Middle Line', prize: 'Cash Prize', amount: '500' },
+  { name: 'Bottom Line', prize: 'Cash Prize', amount: '500' },
+  { name: 'Four Corners', prize: 'Cash Prize', amount: '500' },
+  { name: 'Full House (1st)', prize: 'Grand Prize', amount: '1500' },
+  { name: 'Full House (2nd)', prize: 'Second Prize', amount: '1000' },
+  { name: 'Star / King / Queen', prize: 'Special Prize', amount: '300' },
+];
 
 export const PrizesSection: React.FC<PrizesSectionProps> = ({
   prizes,
@@ -46,6 +61,8 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
   onTogglePaid,
   onReopenPrize,
   onAddCustomPrize,
+  onDeletePrize,
+  onClearAllPrizes,
 }) => {
   const [activeTab, setActiveTab] = useState<'categories' | 'claims'>('categories');
   const [showClaimModal, setShowClaimModal] = useState(false);
@@ -54,10 +71,10 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
   const [ticketNumber, setTicketNumber] = useState('');
   const [notes, setNotes] = useState('');
 
-  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [customName, setCustomName] = useState('');
-  const [customPrizeName, setCustomPrizeName] = useState('');
-  const [customAmount, setCustomAmount] = useState('100');
+  const [customPrizeName, setCustomPrizeName] = useState('Cash Prize');
+  const [customAmount, setCustomAmount] = useState('500');
 
   const formatINR = (paise: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -80,17 +97,23 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
     setActiveTab('claims');
   };
 
-  const handleCustomPrizeSubmit = (e: React.FormEvent) => {
+  const handleAddPrizeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customName.trim() || !customPrizeName.trim()) return;
+    if (!customName.trim()) return;
 
     const amount = parseInt(customAmount, 10) || 0;
-    onAddCustomPrize(customName, customPrizeName, amount, 1);
+    onAddCustomPrize(customName, customPrizeName || 'Cash Prize', amount, 1);
 
     setCustomName('');
-    setCustomPrizeName('');
-    setCustomAmount('100');
-    setShowCustomModal(false);
+    setCustomPrizeName('Cash Prize');
+    setCustomAmount('500');
+    setShowAddModal(false);
+  };
+
+  const applyPreset = (preset: typeof PRESET_SUGGESTIONS[0]) => {
+    setCustomName(preset.name);
+    setCustomPrizeName(preset.prize);
+    setCustomAmount(preset.amount);
   };
 
   const pendingClaimsCount = winners.filter((w) => w.status === WinnerStatus.CLAIMED).length;
@@ -101,17 +124,19 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-border pb-3">
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-gold-400" />
-          <h3 className="text-base font-bold text-white">Prize Categories & Claims</h3>
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            Prize Categories & Claims
+          </h3>
         </div>
 
-        <div className="flex items-center gap-1 rounded-xl bg-surface-subtle p-1 border border-white/5 text-xs font-semibold">
+        <div className="flex items-center gap-1 rounded-xl bg-surface-subtle p-1 border border-surface-border text-xs font-semibold">
           <button
             type="button"
             onClick={() => setActiveTab('categories')}
             className={`rounded-lg px-3 py-1.5 transition-all ${
               activeTab === 'categories'
                 ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Prizes ({prizes.length})
@@ -122,7 +147,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
             className={`relative rounded-lg px-3 py-1.5 transition-all ${
               activeTab === 'claims'
                 ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             Claims ({winners.length})
@@ -138,107 +163,155 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
       {/* Categories View */}
       {activeTab === 'categories' && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">
-              Claim physical tickets against any active prize
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {prizes.length === 0
+                ? 'Add your custom prizes below'
+                : `Active Prizes (${prizes.length})`}
             </span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              {prizes.length > 0 && onClearAllPrizes && (
+                <button
+                  type="button"
+                  onClick={onClearAllPrizes}
+                  className="flex items-center gap-1 rounded-lg border border-surface-border bg-surface px-2.5 py-1 text-xs font-medium text-slate-500 hover:text-rose-500 hover:border-rose-500/40 transition-colors"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  <span>Clear All</span>
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setShowCustomModal(true)}
-                className="flex items-center gap-1 rounded-lg border border-surface-border bg-surface-subtle px-2.5 py-1 text-xs font-semibold text-slate-300 hover:border-slate-500 transition-colors"
+                onClick={() => setShowAddModal(true)}
+                className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-500 transition-colors"
               >
-                <Plus className="h-3.5 w-3.5 text-brand-400" />
-                <span>Add Custom</span>
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Prize Category</span>
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedPrizeId(prizes[0]?.id || '');
-                  setShowClaimModal(true);
-                }}
-                className="flex items-center gap-1 rounded-lg bg-brand-600 px-3 py-1 text-xs font-semibold text-white shadow-sm hover:bg-brand-500 transition-colors"
-              >
-                <Ticket className="h-3.5 w-3.5" />
-                <span>Claim Winner</span>
-              </button>
+              {prizes.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPrizeId(prizes[0]?.id || '');
+                    setShowClaimModal(true);
+                  }}
+                  className="flex items-center gap-1 rounded-lg border border-surface-border bg-surface px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:border-brand-500 hover:text-brand-500 transition-colors"
+                >
+                  <Ticket className="h-3.5 w-3.5" />
+                  <span>Claim Winner</span>
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {prizes.map((prize) => {
-              const verifiedForPrize = winners.filter(
-                (w) => w.prizeId === prize.id && w.status === WinnerStatus.VERIFIED
-              );
-              const isCompleted = prize.status === PrizeStatus.COMPLETED;
+          {prizes.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-surface-border p-8 text-center space-y-3">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/10 text-brand-500">
+                <Trophy className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                  No Prize Categories Yet
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                  Add custom prize categories for your party (e.g. Early 5, Top Line, Middle Line, Bottom Line, Full House).
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:bg-brand-500 active:scale-95"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add First Prize</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {prizes.map((prize) => {
+                const verifiedForPrize = winners.filter(
+                  (w) => w.prizeId === prize.id && w.status === WinnerStatus.VERIFIED
+                );
+                const isCompleted = prize.status === PrizeStatus.COMPLETED;
 
-              return (
-                <div
-                  key={prize.id}
-                  className={`flex items-center justify-between rounded-xl border p-3 transition-all ${
-                    isCompleted
-                      ? 'border-emerald-500/30 bg-emerald-500/5'
-                      : 'border-surface-border bg-surface-subtle/70'
-                  }`}
-                >
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-sm text-slate-100">
-                        {prize.name}
-                      </span>
-                      {isCompleted ? (
-                        <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-                          COMPLETED
+                return (
+                  <div
+                    key={prize.id}
+                    className={`flex items-center justify-between rounded-xl border p-3 transition-all ${
+                      isCompleted
+                        ? 'border-emerald-500/30 bg-emerald-500/5'
+                        : 'border-surface-border bg-surface-subtle/70'
+                    }`}
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                          {prize.name}
                         </span>
-                      ) : (
-                        <span className="rounded-full bg-brand-500/20 px-2 py-0.5 text-[10px] font-bold text-brand-300">
-                          ACTIVE
+                        {isCompleted ? (
+                          <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-500 dark:text-emerald-400">
+                            COMPLETED
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-brand-500/20 px-2 py-0.5 text-[10px] font-bold text-brand-600 dark:text-brand-300">
+                            ACTIVE
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                        <span>{prize.prizeName}</span>
+                        <span>•</span>
+                        <span className="font-semibold text-gold-600 dark:text-gold-400">
+                          {formatINR(prize.prizeAmount)}
                         </span>
+                      </div>
+
+                      {/* Verified winners display */}
+                      {verifiedForPrize.length > 0 && (
+                        <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium pt-1">
+                          🏆 Winner: {verifiedForPrize.map((w) => `${w.playerName} (#${w.ticketNumber})`).join(', ')}
+                        </div>
                       )}
                     </div>
-                    <div className="text-xs text-slate-400 flex items-center gap-2">
-                      <span>{prize.prizeName}</span>
-                      <span>•</span>
-                      <span className="font-semibold text-gold-400">
-                        {formatINR(prize.prizeAmount)}
-                      </span>
+
+                    <div className="flex items-center gap-1.5">
+                      {isCompleted ? (
+                        <button
+                          type="button"
+                          onClick={() => onReopenPrize(prize.id)}
+                          className="rounded-lg border border-surface-border bg-surface p-1.5 text-xs text-slate-400 hover:text-amber-500 hover:border-amber-500/40"
+                          title="Reopen prize for more winners"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPrizeId(prize.id);
+                            setShowClaimModal(true);
+                          }}
+                          className="rounded-lg bg-surface border border-surface-border px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-brand-500 hover:text-brand-500"
+                        >
+                          Claim
+                        </button>
+                      )}
+
+                      {/* Delete Prize Button */}
+                      <button
+                        type="button"
+                        onClick={() => onDeletePrize(prize.id)}
+                        className="rounded-lg p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-colors"
+                        title="Delete prize category"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
-
-                    {/* Verified winners display */}
-                    {verifiedForPrize.length > 0 && (
-                      <div className="text-xs text-emerald-400 font-medium pt-1">
-                        🏆 Winner: {verifiedForPrize.map((w) => `${w.playerName} (#${w.ticketNumber})`).join(', ')}
-                      </div>
-                    )}
                   </div>
-
-                  <div className="flex items-center gap-1.5">
-                    {isCompleted ? (
-                      <button
-                        type="button"
-                        onClick={() => onReopenPrize(prize.id)}
-                        className="rounded-lg border border-surface-border bg-surface p-1.5 text-xs text-slate-400 hover:text-amber-400 hover:border-amber-400/40"
-                        title="Reopen prize for more winners"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedPrizeId(prize.id);
-                          setShowClaimModal(true);
-                        }}
-                        className="rounded-lg bg-surface border border-surface-border px-2.5 py-1 text-xs font-semibold text-slate-300 hover:border-brand-500 hover:text-white"
-                      >
-                        Claim
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -246,7 +319,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
       {activeTab === 'claims' && (
         <div className="space-y-3">
           {winners.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-surface-border p-8 text-center text-slate-400 text-xs">
+            <div className="rounded-xl border border-dashed border-surface-border p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
               No ticket claims registered yet. Tap "Claim Winner" to verify a player's physical ticket.
             </div>
           ) : (
@@ -264,18 +337,18 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                 >
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white">
                         {winner.playerName}
                       </span>
-                      <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-xs text-slate-300">
+                      <span className="rounded bg-black/10 dark:bg-white/10 px-1.5 py-0.5 font-mono text-xs text-slate-700 dark:text-slate-300">
                         Ticket #{winner.ticketNumber}
                       </span>
-                      <span className="text-xs text-gold-400 font-semibold">
+                      <span className="text-xs text-gold-600 dark:text-gold-400 font-semibold">
                         ({winner.categoryName})
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <span>Claimed at #{winner.atSequence} calls</span>
                       {winner.notes && <span>• Note: {winner.notes}</span>}
                     </div>
@@ -296,7 +369,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                         <button
                           type="button"
                           onClick={() => onRejectWinner(winner.id)}
-                          className="flex items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/20 active:scale-95"
+                          className="flex items-center gap-1 rounded-lg border border-rose-500/30 bg-rose-500/10 px-2.5 py-1.5 text-xs font-semibold text-rose-500 hover:bg-rose-500/20 active:scale-95"
                         >
                           <XCircle className="h-3.5 w-3.5" />
                           <span>Reject</span>
@@ -306,7 +379,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
 
                     {winner.status === WinnerStatus.VERIFIED && (
                       <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-400">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           VERIFIED
                         </span>
@@ -317,8 +390,8 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                           onClick={() => onTogglePaid(winner.id)}
                           className={`flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
                             winner.isPaid
-                              ? 'bg-gold-500/20 text-gold-400 border border-gold-500/40'
-                              : 'bg-surface border border-surface-border text-slate-400 hover:text-white'
+                              ? 'bg-gold-500/20 text-gold-600 dark:text-gold-400 border border-gold-500/40'
+                              : 'bg-surface border border-surface-border text-slate-500 hover:text-slate-900 dark:hover:text-white'
                           }`}
                         >
                           <DollarSign className="h-3 w-3" />
@@ -328,7 +401,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                     )}
 
                     {winner.status === WinnerStatus.REJECTED && (
-                      <span className="rounded-full bg-rose-500/20 px-2.5 py-0.5 text-xs font-bold text-rose-400">
+                      <span className="rounded-full bg-rose-500/20 px-2.5 py-0.5 text-xs font-bold text-rose-500 dark:text-rose-400">
                         REJECTED
                       </span>
                     )}
@@ -344,23 +417,23 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
       {showClaimModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-surface-border bg-surface p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Ticket className="h-5 w-5 text-brand-400" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Ticket className="h-5 w-5 text-brand-500" />
               Claim Physical Ticket
             </h3>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Enter the player's name and physical ticket number to verify their numbers against the {calledCount} called numbers.
             </p>
 
             <form onSubmit={handleClaimSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Prize Category
                 </label>
                 <select
                   value={selectedPrizeId}
                   onChange={(e) => setSelectedPrizeId(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-3 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-3 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 >
                   {prizes.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -371,49 +444,49 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Player Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     required
                     placeholder="e.g. Rahul Sharma"
                     value={playerName}
                     onChange={(e) => setPlayerName(e.target.value)}
-                    className="w-full rounded-xl border border-surface-border bg-surface-subtle pl-9 pr-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none"
+                    className="w-full rounded-xl border border-surface-border bg-surface-subtle pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Physical Ticket Number
                 </label>
                 <div className="relative">
-                  <Ticket className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                  <Ticket className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
                     required
                     placeholder="e.g. 42"
                     value={ticketNumber}
                     onChange={(e) => setTicketNumber(e.target.value)}
-                    className="w-full rounded-xl border border-surface-border bg-surface-subtle pl-9 pr-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none"
+                    className="w-full rounded-xl border border-surface-border bg-surface-subtle pl-9 pr-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Notes (Optional)
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Checked line 1 offline"
+                  placeholder="e.g. Verified offline by referee"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2 text-sm text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 />
               </div>
 
@@ -421,7 +494,7 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowClaimModal(false)}
-                  className="w-1/2 rounded-xl border border-surface-border bg-surface-subtle py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+                  className="w-1/2 rounded-xl border border-surface-border bg-surface-subtle py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
                 >
                   Cancel
                 </button>
@@ -437,49 +510,65 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
         </div>
       )}
 
-      {/* Add Custom Prize Modal */}
-      {showCustomModal && (
+      {/* Add Custom Prize Category Modal */}
+      {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-surface-border bg-surface p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Plus className="h-5 w-5 text-brand-400" />
-              Add Custom Prize Category
+          <div className="w-full max-w-md rounded-2xl border border-surface-border bg-surface p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Plus className="h-5 w-5 text-brand-500" />
+              Add Prize Category
             </h3>
-            <p className="text-xs text-slate-400">
-              Create special categories for your party (e.g. "Breakfast Line", "Kitty King", "Jodi").
-            </p>
 
-            <form onSubmit={handleCustomPrizeSubmit} className="space-y-4">
+            {/* Quick Presets */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Quick Suggestions (Tap to prefill):
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {PRESET_SUGGESTIONS.map((preset) => (
+                  <button
+                    key={preset.name}
+                    type="button"
+                    onClick={() => applyPreset(preset)}
+                    className="rounded-lg border border-surface-border bg-surface-subtle px-2.5 py-1 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:border-brand-500 hover:text-brand-500 transition-colors"
+                  >
+                    {preset.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <form onSubmit={handleAddPrizeSubmit} className="space-y-3.5 pt-1">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Category Name
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Breakfast Line"
+                  placeholder="e.g. Early Five, Full House, Star"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Prize Item / Reward
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Gift Hamper or Cash"
+                  placeholder="e.g. Cash Prize, Gift Hamper"
                   value={customPrizeName}
                   onChange={(e) => setCustomPrizeName(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   Prize Value in ₹ (Rupees)
                 </label>
                 <input
@@ -489,15 +578,15 @@ export const PrizesSection: React.FC<PrizesSectionProps> = ({
                   required
                   value={customAmount}
                   onChange={(e) => setCustomAmount(e.target.value)}
-                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-sm text-white focus:border-brand-500 focus:outline-none"
+                  className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:border-brand-500 focus:outline-none"
                 />
               </div>
 
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setShowCustomModal(false)}
-                  className="w-1/2 rounded-xl border border-surface-border bg-surface-subtle py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800"
+                  onClick={() => setShowAddModal(false)}
+                  className="w-1/2 rounded-xl border border-surface-border bg-surface-subtle py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
                 >
                   Cancel
                 </button>

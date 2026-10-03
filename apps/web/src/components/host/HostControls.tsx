@@ -8,7 +8,6 @@ import {
   Volume2,
   VolumeX,
   FastForward,
-  Hash,
   AlertTriangle,
   RefreshCw,
 } from 'lucide-react';
@@ -26,7 +25,6 @@ interface HostControlsProps {
   onUndoLast: () => void;
   onTogglePause: () => void;
   onToggleAutoCalling: () => void;
-  onManualCall: (num: number) => boolean;
   onResetGame: () => void;
   onUpdateSettings: (newSettings: Partial<GameSettings>) => void;
 }
@@ -42,35 +40,12 @@ export const HostControls: React.FC<HostControlsProps> = ({
   onUndoLast,
   onTogglePause,
   onToggleAutoCalling,
-  onManualCall,
   onResetGame,
   onUpdateSettings,
 }) => {
-  const [showManualModal, setShowManualModal] = useState(false);
-  const [manualInput, setManualInput] = useState('');
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [manualError, setManualError] = useState('');
 
   const isLive = status === GameStatus.LIVE;
-
-  const handleManualSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const num = parseInt(manualInput.trim(), 10);
-    if (isNaN(num) || num < 1 || num > 90) {
-      setManualError('Please enter a valid number between 1 and 90');
-      return;
-    }
-
-    const success = onManualCall(num);
-    if (!success) {
-      setManualError(`Number ${num} has already been called!`);
-      return;
-    }
-
-    setManualInput('');
-    setManualError('');
-    setShowManualModal(false);
-  };
 
   return (
     <div className="w-full space-y-4">
@@ -142,8 +117,8 @@ export const HostControls: React.FC<HostControlsProps> = ({
         </button>
       </div>
 
-      {/* Controls Toolbar: Undo, Pause, Manual, Auto, Settings */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      {/* Controls Toolbar: Undo, Pause, Auto */}
+      <div className="grid grid-cols-3 gap-2.5">
         {/* Undo Button */}
         <button
           type="button"
@@ -177,17 +152,6 @@ export const HostControls: React.FC<HostControlsProps> = ({
               <span>Resume Game</span>
             </>
           )}
-        </button>
-
-        {/* Manual Call Button */}
-        <button
-          type="button"
-          disabled={!isLive}
-          onClick={() => setShowManualModal(true)}
-          className="flex items-center justify-center gap-2 rounded-xl border border-surface-border bg-surface px-4 py-3 text-sm font-semibold text-slate-300 transition-all hover:bg-surface-subtle hover:border-slate-500 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
-        >
-          <Hash className="h-4 w-4 text-cyan-400" />
-          <span>Manual Call</span>
         </button>
 
         {/* Auto Caller Toggle */}
@@ -272,56 +236,6 @@ export const HostControls: React.FC<HostControlsProps> = ({
           <span>Reset Board</span>
         </button>
       </div>
-
-      {/* Manual Call Modal */}
-      {showManualModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-sm rounded-2xl border border-surface-border bg-surface p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-bold text-white">Manual Number Call</h3>
-            <p className="text-xs text-slate-400">
-              Enter any number from 1 to 90 that hasn't been called yet.
-            </p>
-
-            <form onSubmit={handleManualSubmit} className="space-y-4">
-              <input
-                type="number"
-                min="1"
-                max="90"
-                autoFocus
-                value={manualInput}
-                onChange={(e) => setManualInput(e.target.value)}
-                placeholder="e.g. 47"
-                className="w-full rounded-xl border border-surface-border bg-surface-subtle px-4 py-3 text-2xl font-bold text-center text-white focus:border-brand-500 focus:outline-none"
-              />
-
-              {manualError && (
-                <p className="text-xs font-medium text-rose-400 text-center">
-                  {manualError}
-                </p>
-              )}
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowManualModal(false);
-                    setManualError('');
-                  }}
-                  className="w-1/2 rounded-xl border border-surface-border bg-surface-subtle py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="w-1/2 rounded-xl bg-brand-600 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-brand-500"
-                >
-                  Call Number
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Reset Confirmation Modal */}
       {showResetConfirm && (
