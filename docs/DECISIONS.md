@@ -93,3 +93,14 @@ This document tracks all design decisions, architectural trade-offs, and default
 - **Decision**:
   - Whenever a host queries a game ID that does not belong to them, the API returns `404 GAME_NOT_FOUND` instead of `403 FORBIDDEN`.
   - This eliminates ID enumeration and metadata probing.
+
+---
+
+## ADR-011: Standalone Vercel Deployment Mode (Client-Side & Serverless Game Control Engine)
+- **Context**: For hosting games with friends and family without needing external database infrastructure (Postgres, Redis, Railway), the platform must run seamlessly and zero-config directly on Vercel.
+- **Decision**:
+  - Implement a full-featured Standalone Engine in `apps/web` utilizing `packages/shared` types, state machine, and bilingual words dictionary.
+  - Generates cryptographically secure random numbers (1-90) using browser `crypto.getRandomValues`.
+  - Persists game state, called numbers, prize quotas, and winner verifications in browser `localStorage`, ensuring zero data loss on page refreshes or tab switches.
+  - Integrates Web Speech API with bilingual voice announcements (English, Hindi, Bilingual), auto-caller timer option, physical ticket winner verification with confetti fanfare, and a dedicated distraction-free TV/Projector display mode.
+
